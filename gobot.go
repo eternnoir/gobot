@@ -1,7 +1,6 @@
 package gobot
 
 import (
-	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
@@ -13,7 +12,7 @@ var (
 	workerMu  sync.RWMutex
 	adapterMu sync.RWMutex
 	workers   = make(map[string]Worker)
-	adapter   Adapter
+	adapters  = make(map[string]Adapter)
 )
 
 func RegisterWorker(name string, worker Worker) {
@@ -30,41 +29,68 @@ func RegisterWorker(name string, worker Worker) {
 	workers[name] = worker
 }
 
-func RegisterAdapter(newadapter Adapter) {
-	adapterMu.Lock()
-	defer adapterMu.Unlock()
-	adapter = newadapter
+type Gobot struct {
+	Name     string
+	workers  map[string]Worker
+	adapters map[string]Adapter
 }
 
-func StartGoBot() error {
-	err := initAdapter()
+func NewDefaultGobot(botname string) *Gobot {
+	ret := &Gobot{}
+	ret.Name = botname
+	ret.workers = workers
+	ret.adapters = adapters
+	return ret
+}
+
+func RegisterAdapter(name string, newadapter Adapter) {
+	adapterMu.Lock()
+	defer adapterMu.Unlock()
+	if newadapter == nil {
+		panic("gobot: Adapter cannot be nil.")
+	}
+	if _, exist := adapters[name]; exist {
+		panic("gobot: " + name + " exist.")
+	}
+	log.Debugf("Add adapter %s", name)
+	adapters[name] = newadapter
+}
+
+func (bot *Gobot) StartGoBot() error {
+	err := bot.initAdapter()
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	err = initWorkers()
+	err = bot.initWorkers()
 	if err != nil {
 		log.Error(err)
 		return err
 	}
+	go bot.startAdaperts()
 	return http.ListenAndServe("localhost:6060", nil)
 }
 
-func initAdapter() error {
-	if adapter == nil {
-		return errors.New("gobot's adapter can not be nil.")
+func (bot *Gobot) startAdaperts() {
+	for name, adapter := range bot.adapters {
+		log.Infof("Start Adapter %s", name)
+		go adapter.Start()
 	}
-	err := adapter.Init()
-	if err != nil {
-		log.Error(err)
-		return err
+}
+
+func (bot *Gobot) initAdapter() error {
+	for name, adapter := range bot.adapters {
+		err := adapter.Init()
+		if err != nil {
+			return fmt.Errorf("Init Adapter %s Fail. %s", name, err.Error())
+		}
 	}
 	return nil
 }
 
-func initWorkers() error {
-	for name, worker := range workers {
+func (bot *Gobot) initWorkers() error {
+	for name, worker := range bot.workers {
 		err := worker.Init()
 		return fmt.Errorf("Init worker %s Fail. %s", name, err.Error())
 	}
