@@ -75,6 +75,9 @@ func (bot *Gobot) StartGoBot() error {
 
 func (bot *Gobot) Receive(message *payload.Message) {
 	log.Infof("Receive new message. %#v", message)
+	if message.SourceAdapter == "" {
+		panic("Message's SourceAdapter Id must be seted.")
+	}
 	for name, worker := range bot.workers {
 		// Call workers process
 		log.Debugf("Call worker %s process message %#v", name, message)
@@ -85,6 +88,11 @@ func (bot *Gobot) Receive(message *payload.Message) {
 			}
 		}()
 	}
+}
+
+func (bot *Gobot) Reply(orimessage *payload.Message, text string) error {
+	adapter := bot.adapters[orimessage.SourceAdapter]
+	return adapter.Reply(orimessage, text)
 }
 
 func (bot *Gobot) startAdaperts() {
@@ -107,7 +115,9 @@ func (bot *Gobot) initAdapter() error {
 func (bot *Gobot) initWorkers() error {
 	for name, worker := range bot.workers {
 		err := worker.Init()
-		return fmt.Errorf("Init worker %s Fail. %s", name, err.Error())
+		if err != nil {
+			return fmt.Errorf("Init worker %s Fail. %s", name, err.Error())
+		}
 	}
 	return nil
 }
