@@ -3,6 +3,7 @@ package gobot
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/eternnoir/gobot/payload"
 	"net/http"
 	_ "net/http/pprof"
 	"sync"
@@ -70,6 +71,14 @@ func (bot *Gobot) StartGoBot() error {
 	}
 	go bot.startAdaperts()
 	return http.ListenAndServe("localhost:6060", nil)
+}
+
+func (bot *Gobot) Receive(message *payload.Message) {
+	for name, worker := range bot.workers {
+		// Call workers process
+		log.Debugf("Call worker %s process message %#v", name, message)
+		worker.Process(bot, message)
+	}
 }
 
 func (bot *Gobot) startAdaperts() {
