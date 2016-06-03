@@ -74,10 +74,16 @@ func (bot *Gobot) StartGoBot() error {
 }
 
 func (bot *Gobot) Receive(message *payload.Message) {
+	log.Infof("Receive new message. %#v", message)
 	for name, worker := range bot.workers {
 		// Call workers process
 		log.Debugf("Call worker %s process message %#v", name, message)
-		worker.Process(bot, message)
+		go func() {
+			err := worker.Process(bot, message)
+			if err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 }
 
@@ -90,7 +96,7 @@ func (bot *Gobot) startAdaperts() {
 
 func (bot *Gobot) initAdapter() error {
 	for name, adapter := range bot.adapters {
-		err := adapter.Init()
+		err := adapter.Init(bot)
 		if err != nil {
 			return fmt.Errorf("Init Adapter %s Fail. %s", name, err.Error())
 		}

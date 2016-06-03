@@ -5,9 +5,11 @@ import (
 )
 
 type Adapter interface {
-	Init() error
+	Init(gobot *Gobot) error
 
 	Start()
+
+	Send(text string) error
 
 	Reply(orgmessage *payload.Message, text string) error
 }
