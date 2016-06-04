@@ -5,6 +5,6 @@ import (
 )
 
 type Worker interface {
-	Init() error
+	Init(gobot *Gobot) error
 	Process(gobot *Gobot, message *payload.Message) error
 }

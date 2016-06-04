@@ -31,9 +31,10 @@ func RegisterWorker(name string, worker Worker) {
 }
 
 type Gobot struct {
-	Name     string
-	workers  map[string]Worker
-	adapters map[string]Adapter
+	Name       string
+	workers    map[string]Worker
+	adapters   map[string]Adapter
+	ConfigPath string
 }
 
 func NewDefaultGobot(botname string) *Gobot {
@@ -41,6 +42,7 @@ func NewDefaultGobot(botname string) *Gobot {
 	ret.Name = botname
 	ret.workers = workers
 	ret.adapters = adapters
+	ret.ConfigPath = "./"
 	return ret
 }
 
@@ -90,6 +92,13 @@ func (bot *Gobot) Receive(message *payload.Message) {
 	}
 }
 
+func (bot *Gobot) Send(text string) {
+	for an, adapter := range bot.adapters {
+		log.Debugf("Use adapter %s, Send message %s", an, text)
+		go adapter.Send(text)
+	}
+}
+
 func (bot *Gobot) Reply(orimessage *payload.Message, text string) error {
 	adapter := bot.adapters[orimessage.SourceAdapter]
 	return adapter.Reply(orimessage, text)
@@ -114,7 +123,7 @@ func (bot *Gobot) initAdapter() error {
 
 func (bot *Gobot) initWorkers() error {
 	for name, worker := range bot.workers {
-		err := worker.Init()
+		err := worker.Init(bot)
 		if err != nil {
 			return fmt.Errorf("Init worker %s Fail. %s", name, err.Error())
 		}
