@@ -99,6 +99,13 @@ func (bot *Gobot) Send(text string) {
 	}
 }
 
+func (bot *Gobot) SendToChat(text, chatroom string) {
+	for an, adapter := range bot.adapters {
+		log.Debugf("Use adapter %s, Send message %s to ChatRoom %s", an, text, chatroom)
+		go adapter.SendToChat(text, chatroom)
+	}
+}
+
 func (bot *Gobot) Reply(orimessage *payload.Message, text string) error {
 	adapter := bot.adapters[orimessage.SourceAdapter]
 	return adapter.Reply(orimessage, text)

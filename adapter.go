@@ -11,5 +11,7 @@ type Adapter interface {
 
 	Send(text string) error
 
+	SendToChat(text, chatroom string) error
+
 	Reply(orgmessage *payload.Message, text string) error
 }
