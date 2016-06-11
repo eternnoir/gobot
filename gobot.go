@@ -83,12 +83,10 @@ func (bot *Gobot) Receive(message *payload.Message) {
 	for name, worker := range bot.workers {
 		// Call workers process
 		log.Debugf("Call worker %s process message %#v", name, message)
-		go func() {
-			err := worker.Process(bot, message)
-			if err != nil {
-				log.Error(err)
-			}
-		}()
+		err := worker.Process(bot, message)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 }
 
