@@ -126,7 +126,7 @@ func (bot *Gobot) initAdapter() error {
 	for name, adapter := range bot.adapters {
 		err := adapter.Init(bot)
 		if err != nil {
-			return fmt.Errorf("Init Adapter %s Fail. %s", name, err.Error())
+			return fmt.Errorf("init Adapter %s Fail. %s", name, err.Error())
 		}
 	}
 	return nil
@@ -136,7 +136,7 @@ func (bot *Gobot) initWorkers() error {
 	for name, worker := range bot.workers {
 		err := worker.Init(bot)
 		if err != nil {
-			return fmt.Errorf("Init worker %s Fail. %s", name, err.Error())
+			return fmt.Errorf("init worker %s Fail. %s", name, err.Error())
 		}
 	}
 	return nil
