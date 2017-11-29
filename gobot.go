@@ -2,11 +2,11 @@ package gobot
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/eternnoir/gobot/payload"
-	"net/http"
 	_ "net/http/pprof"
 	"sync"
+
+	"github.com/eternnoir/gobot/payload"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -35,6 +35,7 @@ type Gobot struct {
 	workers    map[string]Worker
 	adapters   map[string]Adapter
 	ConfigPath string
+	stopChan   chan struct{}
 }
 
 func NewDefaultGobot(botname string) *Gobot {
@@ -43,6 +44,7 @@ func NewDefaultGobot(botname string) *Gobot {
 	ret.workers = workers
 	ret.adapters = adapters
 	ret.ConfigPath = "./"
+	ret.stopChan = make(chan struct{})
 	return ret
 }
 
@@ -72,7 +74,11 @@ func (bot *Gobot) StartGoBot() error {
 		return err
 	}
 	go bot.startAdaperts()
-	return http.ListenAndServe("localhost:6060", nil)
+	<-bot.stopChan
+}
+
+func (bot *Gobot) Stop() {
+	bot.stopChan <- struct{}{}
 }
 
 func (bot *Gobot) Receive(message *payload.Message) {

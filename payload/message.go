@@ -1,7 +1,5 @@
 package payload
 
-import ()
-
 type Message struct {
 	Id            string
 	FromUser      *User
