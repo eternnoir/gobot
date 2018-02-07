@@ -75,6 +75,7 @@ func (bot *Gobot) StartGoBot() error {
 	}
 	go bot.startAdaperts()
 	<-bot.stopChan
+	return nil
 }
 
 func (bot *Gobot) Stop() {
